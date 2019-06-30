@@ -1,4 +1,17 @@
-const autoCheck = function() {
+addModichecker();
+setTimeout(getCheckDone, 1000);
+
+/**
+ * @noreturn
+ */
+async function addModichecker() {
+  await document.body.addEventListener('DOMSubtreeModified', getCheckDone, false);
+}
+
+/**
+ * @noreturn
+ */
+const autoCheck = function () {
   const pageTitle = document.title;
   const inputList = document.getElementsByTagName('input');
   const crit1 = pageTitle.includes('본인') && pageTitle.includes('확인');
@@ -11,46 +24,37 @@ const autoCheck = function() {
     }
   }
 };
+
+/**
+ * @param {String} tagname
+ * @return {boolean}
+ */
+const uncheckAd = function (tagname) {
+  let clicked = false
+  const elements = document.getElementsByTagName(tagname);
+  for (let i = 0; i < elements.length; i++) {
+    if (elements[i].innerText.includes('광고성')) {
+      elements[i].click();
+      clicked = true;
+      break;
+    }
+  };
+  return clicked;
+}
+
 /**
  * @noreturn
  */
-(async function getCheckDone() {
+async function getCheckDone() {
   try {
     if (document.title) {
-      let ifChange = false;
-			let notAd = false;
-			let done = false;
-      await document.body.addEventListener('DOMSubtreeModified', function() {
-        ifChange = true;
-      }, false);
-			await autoCheck();
-			done = true;
-      if (ifChange) {
-				await autoCheck();
-				done = true; 
-      }
-      const spans = document.getElementsByTagName('span');
-      for (let i = 0; i < spans.length; i++) {
-        if (spans[i].innerText.includes('광고성')) {
-          spans[i].click();
-          notAd = true;
-          break;
-        }
-      };
+      await autoCheck();
+      let notAd = await uncheckAd('span');
       if (!notAd) {
-        const labels = document.getElementsByTagName('label');
-        for (let i = 0; i < labels.length; i++) {
-          if (labels[i].innerText.includes('광고성')) {
-            labels[i].click();
-            break;
-          }
-        };
-			}
-			if (!done) {
-				autoCheck();
-			}
+        await uncheckAd('label');
+      }
     }
   } catch (e) {
     console.error;
   }
-})();
+};
